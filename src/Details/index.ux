@@ -1,0 +1,260 @@
+<template>
+  <div class="details-page">
+    <div class="main-container">
+      <div class="title-area">
+        <text class="title-text">{{ title }}</text>
+        <!-- 时间 -->
+        <div class="time-container">
+          <div class="time-image"></div>
+          <text class="time-text">
+            {{ startDate }} {{ startTime }} 至 {{ endDate }} {{ endTime }}
+          </text>
+        </div>
+        <!-- 地点 -->
+        <div class="position-container">
+          <div class="position-image"></div>
+          <text class="positon-text">{{ position }}</text>
+        </div>
+      </div>
+      <!-- 备注 -->
+      <div class="remark-container">
+        <text class="label-text">备注</text>
+        <text class="remark-text">{{ remark }}</text>
+      </div>
+      <!-- 分隔符 -->
+      <div class="separator"></div>
+      <!-- 提醒 -->
+      <div class="remind-container">
+        <text value="提醒" class="label-text"></text>
+        <text class="remind-text">{{ remindText }}</text>
+      </div>
+    </div>
+    <!-- 编辑按钮 -->
+    <div class="button-container">
+      <div class="edit-button-container">
+        <div class="edit-button" onclick="edit"></div>
+      </div>
+    <!-- 删除按钮 -->
+      <div class="delete-button-container">
+        <div class="delete-button" onclick="delete"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import storage from '@system.storage'
+import router from '@system.router'
+export default {
+  protected: {
+    title: '',
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    position: '',
+    remark: '',
+    idx: '',
+    remindRange: ['不提醒', '开始前10分钟', '开始前半小时', '开始前一小时', '开始前两小时'],
+    remindText: '',
+    remindIndex: 0
+  },
+  // 显示提醒文字
+  onInit() {
+    this.remindText = this.remindRange[this.remindIndex];
+  },
+  // 删除此项目
+  delete() {
+    let that = this;
+    storage.get({
+      key: 'toDoData',
+      success: function (data) {
+        // 在todolist中删除
+        let toDoList = JSON.parse(data);
+        toDoList.splice(that.idx, 1);
+        // 保存到内存中
+        storage.set({
+          key: 'toDoData',
+          value: JSON.stringify(toDoList)
+        })
+      }
+    })
+    // 返回上一级
+    router.back();
+  },
+  // 编辑
+  edit() {
+    router.push({
+      uri: '/ModifyPage',
+      params: {
+        inputValue: this.title,
+        startDate: this.startDate,
+        startTime: this.startTime,
+        endDate: this.endDate,
+        endTime: this.endTime,
+        position: this.position,
+        remark: this.remark,
+        remindIndex: this.remindIndex,
+        idx: this.idx,
+      }
+    })
+  },
+  // 更新提醒文字和索引
+  remindChange(remindEvent) {
+    this.remindText = remindEvent.newValue;
+    this.remindIndex = remindEvent.newSelected;
+  }
+}
+
+</script>
+
+<style>
+.details-page {
+  flex-direction: column;
+  height: 100%;
+  background-color: rgb(242, 242, 242);
+  align-items: center;
+}
+
+.main-container {
+  flex-direction: column;
+  background-color: #ffffff;
+  height: 80%;
+  width: 90%;
+  border-radius: 30px;
+  margin-top: 20px;
+}
+
+.title-area {
+  border-top-left-radius: 25px;
+  border-top-right-radius: 25px;
+  flex-direction: column;
+  background-color: #38a0ff;
+}
+
+.time-container {
+  margin-top: 20px;
+  margin-left: 20px;
+  align-items: center;
+}
+
+.title-text {
+  color: #ffffff;
+  margin-top: 100px;
+  margin-left: 20px;
+  font-size: 60px;
+  font-weight: bold;
+}
+
+.time-text {
+  color: #ffffff;
+  margin-left: 20px;
+  margin-left: 20px;
+}
+
+.positon-text {
+  color: #ffffff;
+  margin-left: 20px;
+}
+
+.time-image {
+  height: 30px;
+  width: 30px;
+  background-image: url("../Common/时钟-fill.png");
+}
+
+.position-container {
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.position-image {
+  height: 30px;
+  width: 30px;
+  background-image: url("../Common/坐标-fill.png");
+}
+
+.remark-container {
+  flex-direction: column;
+  margin: 30px 0 0 20px;
+}
+
+.label-text {
+  color: #000000;
+  font-weight: bold;
+  font-size: 35px;
+}
+
+.remind-text {
+  margin-right: 20px;
+}
+
+.remind-container {
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.clock-container {
+  margin-top: 30px;
+  margin-left: 20px;
+  margin-right: 20px;
+  justify-content: space-between;
+}
+
+.separator {
+  width: 90%;
+  border: 1px solid #cdcdcd;
+  margin: 30px 0 30px 0;
+  align-self: center;
+}
+
+.right {
+  margin-left: 10px;
+  height: 30px;
+  width: 30px;
+  background-image: url("../Common/arrow-right-bold.png");
+}
+
+.remark-text {
+  margin-top: 10px;
+}
+
+.edit-button {
+  height: 60px;
+  width: 60px;
+  background-image: url("../Common/反馈.png");
+}
+
+.edit-button-container {
+  width: 120px;
+  height: 120px;
+  align-items: center;
+  justify-content: center;
+  background-color: #38a0ff;
+  border-radius: 60px;
+}
+
+.delete-button {
+  height: 60px;
+  width: 60px;
+  background-image: url("../Common/delete.png");
+}
+
+.delete-button-container {
+  width: 120px;
+  height: 120px;
+  align-items: center;
+  justify-content: center;
+  background-color: #38a0ff;
+  border-radius: 60px;
+  margin-left: 50px;
+}
+
+.button-container {
+  margin-top: 50px;
+}
+</style>

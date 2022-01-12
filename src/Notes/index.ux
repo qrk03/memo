@@ -1,0 +1,274 @@
+<template>
+  <!-- template里只能有一个根节点 -->
+  <div class="main-page">
+    <list class="notes-list">
+      <!-- 渲染待办列表 -->
+      <block for="{{toDoList}}">
+        <list-item class="toDo-item" type="item">
+          <div class="item-container">
+            <list class="sub-list">
+              <list-item class="sub-item" type="item">
+                <div class="item-block" onclick="{{toDetails($item, $idx)}}">
+                  <text class="item-title">
+                    {{ $item.title }}
+                  </text>
+                  <div class="clock-text-container">
+                    <div class="clock-image"></div>
+                    <text>
+                      {{ $item.startDate }} {{ $item.startTime }} 至 {{ $item.endDate }} {{ $item.endTime }}
+                    </text>
+                  </div>
+                </div>
+              </list-item>
+              <!-- 删除该项 -->
+              <list-item class="sub-item" type="item">
+                <div
+                  class="delete-button"
+                  onclick="{{deleteToDoItem($idx)}}"
+                ></div>
+              </list-item>
+              <!-- 完成该项 -->
+              <list-item class="sub-item" type="item">
+                <div class="checked-button" onclick="{{checkItem($idx)}}"></div>
+              </list-item>
+            </list>
+          </div>
+        </list-item>
+      </block>
+      <!-- 渲染已完成列表 -->
+      <list-item type="done-text">
+        <div class="done-item-container">
+          <div class="down-image"></div>
+          <text>已完成</text>
+        </div>
+      </list-item>
+      <block for="doneList">
+        <list-item class="toDo-item" type="item">
+          <div class="item-container">
+            <list class="sub-list">
+              <list-item class="sub-item" type="item">
+                <div class="item-block">
+                  <text class="delete-item-title">
+                    {{ $item.title }}
+                  </text>
+                  <div class="clock-text-container">
+                    <div class="clock-image"></div>
+                    <text class="delete-item-text">
+                      {{ $item.startDate }} {{ $item.startTime }} 至 {{ $item.endDate }} {{ $item.endTime }}
+                    </text>
+                  </div>
+                </div>
+              </list-item>
+              <!-- 删除该项 -->
+              <list-item class="sub-item" type="item">
+                <div
+                  class="delete-button"
+                  onclick="{{deleteDoneItem($idx)}}"
+                ></div>
+              </list-item>
+            </list>
+          </div>
+        </list-item>
+      </block>
+    </list>
+    <!-- 新建按钮 -->
+    <input type="button" class="add-button" value="+" onclick="toInputPage" />
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import storage from '@system.storage'
+import notification from '@system.notification'
+
+export default {
+  private: {
+    // 待办列表
+    toDoList: [
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 0 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 1 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 2 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 3 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 4 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 0 },
+      { title: '吃饭', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事', remind: 0 },
+    ],
+    // 已完成列表
+    doneList: [
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+      { title: '睡觉', startDate: '2022-1-2', startTime: '11:00', endDate: '2022-1-4', endTime: '8:30', position: '保定市', remark: '没啥事' },
+    ]
+  },
+
+// 页面隐藏时调用
+  onHide() {
+    // 保存todolist到内存
+    storage.set({
+      key: 'toDoData',
+      value: JSON.stringify(this.toDoList), // 转化成字符串
+      success: function () {
+        console.log('保存成功');
+      },
+      fail: function () {
+        console.log('保存失败');
+      }
+    })
+  },
+// 页面显示时调用
+  onShow() {
+    // 从内存中加载todolist
+    const that = this;
+    storage.get({
+      key: 'toDoData',
+      success: function (data) {
+        if (data != '')
+          that.toDoList = JSON.parse(data);  // 解析JSON字符串为js对象
+      },
+      fail: function () {
+        console.log('获取数据失败');
+      }
+    });
+  },
+// 路由到添加页面
+  toInputPage(index) {
+    router.push({
+      uri: '/InputPage',
+    })
+  },
+// 路由到详情页面
+  toDetails(item, idx) {
+    router.push({
+      uri: '/Details',
+      params: {
+        title: item.title,  // 项目标题
+        startDate: item.startDate,  // 开始日期
+        startTime: item.startTime,  // 开始时间
+        endDate: item.endDate,  // 结束日期
+        endTime: item.endTime,  // 结束时间
+        position: item.position,  // 地点
+        remark: item.remark,  // 备注
+        remindIndex: item.remind,  // 提醒
+        idx: idx,  // 索引
+      }
+    })
+  },
+// 删除待办项目
+  deleteToDoItem(idx) {
+    this.toDoList.splice(idx, 1);
+  },
+// 删除已完成项目
+  deleteDoneItem(idx) {
+    this.doneList.splice(idx, 1);
+  },
+// 完成项目
+  checkItem(idx) {
+    let tmp = this.toDoList.splice(idx, 1)[0];  // 从todolist中删除
+    this.doneList.push(tmp);  // 加入donelist
+  },
+// 页面销毁时调用
+  onDestroy() {
+
+  },
+}
+</script>
+
+<style>
+.main-page {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(242, 242, 242);
+}
+
+.item-block {
+  width: 750px;
+  flex-direction: column;
+  padding: 10px 0 10px 25px;
+  border-radius: 30px;
+  background-color: #fff;
+  justify-content: flex-end;
+}
+
+.item-title {
+  font-size: 40px;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.delete-item-title {
+  font-size: 40px;
+  margin-bottom: 10px;
+  text-decoration: line-through;
+}
+
+.delete-item-text {
+  text-decoration: line-through;
+}
+
+.add-button {
+  width: 120px;
+  height: 120px;
+  background-color: #38a0ff;
+  color: #ffffff;
+  font-size: 80px;
+  border-radius: 60px;
+  position: absolute;
+  right: 50px;
+  bottom: 50px;
+}
+
+.sub-list {
+  flex-direction: row;
+}
+
+.delete-button {
+  width: 80px;
+  height: 80px;
+  margin-left: 20px;
+  margin-right: 20px;
+  background-image: url("../Common/round_close.png");
+}
+
+.checked-button {
+  width: 80px;
+  height: 80px;
+  margin-right: 20px;
+  background-image: url("../Common/round_check.png");
+}
+
+.item-container {
+  height: 140px;
+}
+
+.sub-item {
+  align-items: center;
+}
+
+.done-item-container {
+  align-items: center;
+  margin-left: 20px;
+}
+
+.down-image {
+  background-image: url("../Common/arrow-down-bold.png");
+  height: 30px;
+  width: 30px;
+  margin-right: 10px;
+}
+
+.clock-image {
+  height: 30px;
+  width: 30px;
+  background-image: url("../Common/时钟-fill-2.png");
+  margin-right: 10px;
+}
+
+.clock-text-container {
+  align-items: center;
+}
+</style>
